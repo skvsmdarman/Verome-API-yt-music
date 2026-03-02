@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { YTMusic, YouTubeSearch, LastFM, fetchFromPiped, fetchFromInvidious, getLyrics, getTrendingMusic, getRadio, getTopArtists, getTopTracks, getArtistInfo, getTrackInfo, getSongComplete, getAlbumComplete, getArtistComplete, getFullChain } from "./lib.ts";
-import { html as uiHtml } from "./ui.ts";
+import { YTMusic, YouTubeSearch, LastFM, fetchFromPiped, fetchFromInvidious, getLyrics, getTrendingMusic, getRadio, getTopArtists, getTopTracks, getArtistInfo, getTrackInfo, getSongComplete, getAlbumComplete, getArtistComplete, getFullChain } from "./lib";
+import { html as uiHtml } from "./ui";
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
