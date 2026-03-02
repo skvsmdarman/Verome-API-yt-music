@@ -1,466 +1,654 @@
-/**
- * Virome API - Clean Professional UI
- */
-
 export const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Virome API</title>
+  <title>Verome — Premium Music API</title>
   <link rel="icon" href="/assets/logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    :root{--accent:#10b981;--accent-dim:rgba(16,185,129,.15);--bg:#0a0a0a;--surface:#111;--surface2:#1a1a1a;--border:#222;--text:#fff;--muted:#888;--dim:#555}
-    body{font-family:'Inter',system-ui,sans-serif;min-height:100vh;color:var(--text);background:var(--bg)}
-    .bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(16,185,129,.08),transparent)}
-    .container{max-width:900px;margin:0 auto;padding:60px 24px 180px}
-    .hero{text-align:center;margin-bottom:80px}
-    .logo{width:160px;height:160px;margin-bottom:32px;filter:drop-shadow(0 20px 50px rgba(16,185,129,.4));animation:float 6s ease-in-out infinite}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-    .title{font-size:3rem;font-weight:700;margin-bottom:12px;letter-spacing:-1px}
-    .subtitle{color:var(--muted);font-size:1.1rem;font-weight:400}
-    .nav{display:flex;justify-content:center;gap:8px;margin-bottom:48px}
-    .nav-btn{padding:12px 28px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:.9rem;font-weight:500;cursor:pointer;border-radius:10px;transition:all .3s;font-family:inherit}
-    .nav-btn:hover{color:var(--text);border-color:#444;transform:translateY(-2px)}
-    .nav-btn.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim);transform:translateY(-2px)}
-    .tab{display:none;opacity:0;transform:translateY(20px);transition:opacity .4s,transform .4s}
-    .tab.active{display:block;opacity:1;transform:translateY(0)}
-    .section{margin-bottom:40px}
-    .section-title{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:16px;font-weight:600}
-    .api-list{display:flex;flex-direction:column;gap:8px}
-    .api-item{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;transition:all .15s;cursor:pointer}
-    .api-item:hover{border-color:#333;transform:translateX(4px)}
-    .method{font-size:.65rem;font-weight:700;padding:5px 10px;border-radius:6px;background:var(--accent-dim);color:var(--accent);min-width:42px;text-align:center}
-    .path{font-family:'SF Mono',Monaco,monospace;font-size:.85rem;flex:1}
-    .desc{font-size:.75rem;color:var(--dim);max-width:280px;text-align:right}
-    .search-row{display:flex;gap:12px;margin-bottom:24px}
-    .input{flex:1;background:var(--surface);border:1px solid var(--border);padding:14px 18px;border-radius:10px;color:var(--text);font-size:.95rem;font-family:inherit}
-    .input:focus{outline:none;border-color:var(--accent)}
-    .input::placeholder{color:var(--dim)}
-    .select{background:var(--surface);border:1px solid var(--border);padding:14px 18px;border-radius:10px;color:var(--text);font-size:.9rem;font-family:inherit;cursor:pointer;min-width:120px}
-    .select:focus{outline:none;border-color:var(--accent)}
-    .select option{background:var(--bg)}
-    .btn{background:var(--accent);color:#000;border:none;padding:14px 28px;border-radius:10px;font-size:.9rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
-    .btn:hover{opacity:.9}
-    .btn:disabled{opacity:.4}
-    .results{max-height:50vh;overflow-y:auto}
-    .result{display:flex;align-items:center;gap:14px;padding:12px;border-radius:10px;cursor:pointer;transition:all .15s}
-    .result:hover{background:var(--surface)}
-    .result.active{background:var(--accent-dim)}
-    .thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--surface2)}
-    .info{flex:1;min-width:0}
-    .name{font-size:.9rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .artist{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .dur{font-size:.75rem;color:var(--dim);font-family:monospace}
+    :root {
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.4);
+      --bg: #050505;
+      --surface: rgba(20, 20, 20, 0.6);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --text: #ffffff;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
 
-    .empty{padding:48px;text-align:center;color:var(--dim)}
-    .loading{display:none;padding:48px;text-align:center;color:var(--accent)}
-    .tester-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-    .url-preview{font-family:monospace;font-size:.8rem;color:var(--muted);padding:12px 16px;background:var(--surface);border-radius:8px;margin-bottom:16px;border:1px solid var(--border)}
-    .response{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px;max-height:400px;overflow:auto}
-    .response pre{font-family:'SF Mono',Monaco,monospace;font-size:.75rem;color:var(--accent);white-space:pre-wrap;word-break:break-all}
-    .player{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:16px 24px;display:none;z-index:100}
-    .player.visible{display:block}
-    .player-inner{max-width:900px;margin:0 auto}
-    .player-row{display:flex;align-items:center;gap:16px;margin-bottom:12px}
-    .player-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--surface)}
-    .player-info{flex:1;min-width:0}
-    .player-title{font-size:.9rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .player-artist{font-size:.8rem;color:var(--muted)}
-    .controls{display:flex;align-items:center;gap:8px}
-    .ctrl{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-    .ctrl:hover{background:var(--surface2)}
-    .ctrl.play{background:var(--accent);border:none;color:#000;width:44px;height:44px}
-    .progress-row{display:flex;align-items:center;gap:12px}
-    .time{font-size:.7rem;color:var(--muted);min-width:40px;font-family:monospace}
-    .bar{flex:1;height:4px;background:var(--surface2);border-radius:2px;cursor:pointer}
-    .fill{height:100%;background:var(--accent);border-radius:2px;width:0%}
-    @media(max-width:600px){.container{padding:40px 16px 180px}.logo{width:80px;height:80px}.title{font-size:2rem}.desc{display:none}.search-row{flex-direction:column}}
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, .brand { font-family: 'Outfit', sans-serif; }
+
+    /* Animated Background */
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.1), transparent 50%),
+                  radial-gradient(circle at 0% 100%, rgba(16, 185, 129, 0.05), transparent 40%);
+      filter: blur(80px);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 80px 24px 180px;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      margin-bottom: 80px;
+      animation: fadeInDown 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 32px;
+    }
+
+    .logo {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 30px var(--accent-glow));
+      animation: float 6s ease-in-out infinite;
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .title {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -2px;
+      background: linear-gradient(to bottom, #fff, #a1a1aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 60px;
+      background: var(--surface);
+      padding: 6px;
+      border-radius: 16px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      border: 1px solid var(--surface-border);
+      backdrop-filter: blur(20px);
+    }
+
+    .nav-btn {
+      padding: 10px 24px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+    }
+
+    .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .nav-btn.active { background: var(--accent); color: #000; box-shadow: 0 4px 20px var(--accent-glow); }
+
+    /* Tabs */
+    .tab { display: none; }
+    .tab.active { display: block; animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* API Docs Grid */
+    .section { margin-bottom: 48px; }
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 24px;
+      font-weight: 700;
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .api-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 20px;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .api-card:hover {
+      border-color: rgba(16, 185, 129, 0.3);
+      transform: translateY(-4px);
+      background: rgba(30, 30, 30, 0.6);
+    }
+
+    .api-card-header { display: flex; align-items: center; justify-content: space-between; }
+    .method-tag {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-radius: 6px;
+    }
+
+    .path-text { font-family: 'SF Mono', monospace; font-size: 0.9rem; font-weight: 500; color: #fff; }
+    .desc-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Search Bar Premium */
+    .search-container {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(20px);
+    }
+
+    .input-field {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 12px 20px;
+      color: #fff;
+      font-size: 1.1rem;
+      font-family: inherit;
+    }
+
+    .input-field:focus { outline: none; }
+    .input-field::placeholder { color: var(--text-dim); }
+
+    .select-dropdown {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 0 16px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .action-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0 32px;
+      border-radius: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover { transform: scale(1.02); box-shadow: 0 8px 25px var(--accent-glow); }
+
+    /* Results */
+    .result-list { display: flex; flex-direction: column; gap: 8px; }
+    .result-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 16px;
+      border-radius: 18px;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .result-item:hover { background: var(--surface); border-color: var(--surface-border); }
+    .result-item.active { background: var(--accent-glow); border-color: rgba(16, 185, 129, 0.2); }
+
+    .art { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #111; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+    .track-meta { flex: 1; min-width: 0; }
+    .track-name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .artist-name { color: var(--text-muted); font-size: 0.85rem; }
+    .duration { font-family: monospace; font-size: 0.8rem; color: var(--text-dim); }
+
+    /* Player Floating Bar */
+    .player-bar {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 48px);
+      max-width: 900px;
+      background: rgba(10, 10, 10, 0.8);
+      backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      padding: 16px 24px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    .player-bar.visible { display: block; animation: playerSlideIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    
+    @keyframes playerSlideIn {
+      from { transform: translate(-50%, 100%); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+
+    .player-layout { display: flex; align-items: center; gap: 24px; }
+    .player-image { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; }
+    .player-content { flex: 1; min-width: 0; }
+    .player-title { font-weight: 700; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-artist { font-size: 0.8rem; color: var(--text-muted); }
+
+    .player-controls { display: flex; align-items: center; gap: 12px; }
+    .p-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--surface-border);
+      background: var(--glass-bg);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .p-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+    .p-btn.main { background: #fff; color: #000; width: 52px; height: 52px; border: none; }
+    .p-btn.main:hover { transform: scale(1.1); box-shadow: 0 0 25px rgba(255,255,255,0.3); }
+
+    .progress-wrapper { margin-top: 12px; display: flex; align-items: center; gap: 12px; }
+    .time-label { font-size: 0.65rem; color: var(--text-dim); font-family: monospace; min-width: 40px; }
+    .progress-track { flex: 1; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; position: relative; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 10px; width: 0%; box-shadow: 0 0 10px var(--accent-glow); }
+
+    /* Icons Shorthand */
+    .icon { width: 20px; height: 20px; fill: currentColor; }
+
+    @media (max-width: 768px) {
+      .title { font-size: 2.5rem; }
+      .nav { width: 100%; justify-content: space-around; }
+      .search-container { flex-direction: column; }
+      .api-grid { grid-template-columns: 1fr; }
+      .player-controls { gap: 6px; }
+      .p-btn { width: 38px; height: 38px; }
+      .p-btn.main { width: 44px; height: 44px; }
+    }
   </style>
 </head>
 <body>
-  <div class="bg"></div>
+  <div class="bg-mesh"></div>
+  
   <div class="container">
-    <div class="hero">
-      <img src="/assets/logo.png" alt="Virome" class="logo">
-      <h1 class="title">Virome API</h1>
-      <p class="subtitle">Music API for YouTube Music, Lyrics & Streaming</p>
-    </div>
-    
-    <div class="nav">
-      <button class="nav-btn active" onclick="showTab('docs')">Docs</button>
-      <button class="nav-btn" onclick="showTab('player')">Player</button>
-      <button class="nav-btn" onclick="showTab('tester')">Tester</button>
-    </div>
-    
+    <header class="hero">
+      <div class="logo-container">
+        <img src="/assets/logo.png" alt="Verome" class="logo">
+      </div>
+      <h1 class="title">Verome</h1>
+      <p class="subtitle">Next-gen Music API for YouTube Music & Streaming</p>
+    </header>
+
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showTab('docs')">API Docs</button>
+      <button class="nav-btn" onclick="showTab('player')">Playground</button>
+      <button class="nav-btn" onclick="showTab('tester')">Endpoint Tester</button>
+    </nav>
+
+    <!-- API Docs Tab -->
     <div id="docs" class="tab active">
       <div class="section">
-        <div class="section-title">Search</div>
-        <div class="api-list">
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/search</span><span class="desc">Search songs, albums, artists</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/search/suggestions</span><span class="desc">Autocomplete suggestions</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/yt_search</span><span class="desc">YouTube video search</span></div>
+        <h3 class="section-title">Search Intelligence</h3>
+        <div class="api-grid">
+          <div class="api-card" onclick="openTest('search')">
+            <div class="api-card-header">
+              <span class="path-text">/api/search</span>
+              <span class="method-tag">GET</span>
+            </div>
+            <p class="desc-text">Universal search for songs, albums, and artists with metadata.</p>
+          </div>
+          <div class="api-card">
+            <div class="api-card-header">
+              <span class="path-text">/api/yt_search</span>
+              <span class="method-tag">GET</span>
+            </div>
+            <p class="desc-text">Deep-dive YouTube search for videos, channels, and playlists.</p>
+          </div>
         </div>
       </div>
-      
+
       <div class="section">
-        <div class="section-title">Content</div>
-        <div class="api-list">
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/songs/:videoId</span><span class="desc">Song + artist/album links</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/albums/:browseId</span><span class="desc">Album + tracks + artist</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/artists/:browseId</span><span class="desc">Artist + discography</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/playlists/:playlistId</span><span class="desc">Playlist tracks</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/chain/:videoId</span><span class="desc">Song -> Artist -> Albums</span></div>
-        </div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Discovery</div>
-        <div class="api-list">
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/related/:videoId</span><span class="desc">Related songs</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/radio?videoId=</span><span class="desc">Generate radio mix</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/similar?title=&artist=</span><span class="desc">Similar tracks</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/charts?country=</span><span class="desc">Music charts</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/trending?country=</span><span class="desc">Trending music</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/moods</span><span class="desc">Mood categories</span></div>
-        </div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Streaming & Lyrics</div>
-        <div class="api-list">
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/stream?id=</span><span class="desc">Audio stream URLs</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/proxy?url=</span><span class="desc">Audio proxy (CORS)</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/lyrics?title=&artist=</span><span class="desc">Synced lyrics (LRC)</span></div>
-        </div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Info</div>
-        <div class="api-list">
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/artist/info?artist=</span><span class="desc">Artist bio (Last.fm)</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/track/info?title=&artist=</span><span class="desc">Track info (Last.fm)</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/top/artists?country=</span><span class="desc">Top artists</span></div>
-          <div class="api-item"><span class="method">GET</span><span class="path">/api/top/tracks?country=</span><span class="desc">Top tracks</span></div>
+        <h3 class="section-title">Streaming & Media</h3>
+        <div class="api-grid">
+          <div class="api-card" onclick="openTest('stream')">
+            <div class="api-card-header">
+              <span class="path-text">/api/stream</span>
+              <span class="method-tag">GET</span>
+            </div>
+            <p class="desc-text">Retrieve direct audio stream URLs via Piped/Invidious proxies.</p>
+          </div>
+          <div class="api-card" onclick="openTest('lyrics')">
+            <div class="api-card-header">
+              <span class="path-text">/api/lyrics</span>
+              <span class="method-tag">GET</span>
+            </div>
+            <p class="desc-text">Get high-fidelity synchronized LRC lyrics for any track.</p>
+          </div>
         </div>
       </div>
     </div>
-    
+
+    <!-- Playground Tab -->
     <div id="player-tab" class="tab">
-      <div class="search-row">
-        <select class="select" id="filter">
-          <option value="">All</option>
+      <div class="search-container">
+        <select class="select-dropdown" id="filter">
+          <option value="">Everything</option>
           <option value="songs">Songs</option>
           <option value="albums">Albums</option>
           <option value="artists">Artists</option>
         </select>
-        <input type="text" class="input" id="query" placeholder="Search music...">
-        <button class="btn" id="searchBtn" onclick="search()">Search</button>
+        <input type="text" class="input-field" id="query" placeholder="Type to explore music...">
+        <button class="action-btn" id="searchBtn" onclick="search()">Discover</button>
       </div>
-      <div class="loading" id="loading">Searching...</div>
-      <div class="results" id="results"></div>
+      
+      <div id="loading" style="display:none; text-align:center; padding: 40px; color: var(--accent);">
+        <div class="subtitle">Fetching the rhythm...</div>
+      </div>
+      
+      <div class="result-list" id="results">
+        <div style="text-align:center; padding: 60px; color: var(--text-dim);">
+          <p>Search for your favorite tracks to start listening.</p>
+        </div>
+      </div>
     </div>
-    
+
+    <!-- Tester Tab -->
     <div id="tester" class="tab">
-      <div class="tester-row">
-        <select class="select" id="endpoint" onchange="updateInputs()" style="min-width:200px">
-          <option value="search">Search</option>
-          <option value="stream">Stream URLs</option>
-          <option value="song">Song Details</option>
-          <option value="album">Album</option>
-          <option value="artist">Artist</option>
-          <option value="playlist">Playlist</option>
-          <option value="chain">Full Chain</option>
-          <option value="related">Related</option>
-          <option value="radio">Radio</option>
-          <option value="lyrics">Lyrics</option>
-          <option value="charts">Charts</option>
-        </select>
-      </div>
-      <div class="tester-row" id="inputs"></div>
-      <div class="url-preview" id="urlPreview">GET /api/search?q=coldplay</div>
-      <button class="btn" onclick="testApi()">Test</button>
-      <div class="response" id="response"><pre>Response will appear here...</pre></div>
-    </div>
-  </div>
-  
-  <div class="player" id="playerBar">
-    <div class="player-inner">
-      <div class="player-row">
-        <img class="player-thumb" id="pThumb" src="">
-        <div class="player-info">
-          <div class="player-title" id="pTitle">-</div>
-          <div class="player-artist" id="pArtist">-</div>
+      <div style="background: var(--surface); border: 1px solid var(--surface-border); border-radius: 24px; padding: 32px; backdrop-filter: blur(20px);">
+        <div style="margin-bottom: 24px;">
+          <label style="display:block; font-size: 0.75rem; color: var(--accent); font-weight: 700; margin-bottom: 12px;">ENDPOINT</label>
+          <select class="select-dropdown" id="endpoint" onchange="updateInputs()" style="width:100%; height:54px;">
+            <option value="search">Search Global</option>
+            <option value="stream">Stream Provider</option>
+            <option value="song">Song Intel</option>
+            <option value="album">Album Hub</option>
+            <option value="artist">Artist Bio</option>
+            <option value="lyrics">Lyrics Engine</option>
+          </select>
         </div>
-        <div class="controls">
-          <button class="ctrl" onclick="prev()">⏮</button>
-          <button class="ctrl play" id="playBtn" onclick="toggle()">▶</button>
-          <button class="ctrl" onclick="next()">⏭</button>
+        
+        <div id="inputs" style="display:flex; flex-direction:column; gap:16px; margin-bottom: 24px;"></div>
+        
+        <div style="font-family: monospace; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; border: 1px solid var(--surface-border);">
+          <span style="color:var(--accent)">GET</span> <span id="urlPreview">/api/search?q=coldplay</span>
         </div>
-      </div>
-      <div class="progress-row">
-        <span class="time" id="cur">0:00</span>
-        <div class="bar" id="bar" onclick="seek(event)"><div class="fill" id="fill"></div></div>
-        <span class="time" id="total">0:00</span>
+        
+        <button class="action-btn" onclick="testApi()" style="width:100%; height:54px; margin-bottom: 24px;">Execute Request</button>
+        
+        <div id="response" style="background: #000; border-radius: 16px; padding: 20px; max-height: 400px; overflow: auto; border: 1px solid var(--surface-border);">
+          <pre style="font-family: 'SF Mono', monospace; font-size: 0.75rem; color: #10b981;">{ "status": "idle", "message": "Results will appear here" }</pre>
+        </div>
       </div>
     </div>
   </div>
-  
+
+  <!-- Player Bar -->
+  <div class="player-bar" id="playerBar">
+    <div class="player-layout">
+      <img class="player-image" id="pThumb" src="">
+      <div class="player-content">
+        <div class="player-title" id="pTitle">Not Playing</div>
+        <div class="player-artist" id="pArtist">-</div>
+      </div>
+      
+      <div class="player-controls">
+        <button class="p-btn" onclick="prev()">
+          <svg viewBox="0 0 24 24" class="icon"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="p-btn main" id="playBtn" onclick="toggle()">
+          <svg id="playIcon" viewBox="0 0 24 24" class="icon" style="fill: black;"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pauseIcon" viewBox="0 0 24 24" class="icon" style="fill: black; display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <button class="p-btn" onclick="next()">
+          <svg viewBox="0 0 24 24" class="icon"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="progress-wrapper">
+      <span class="time-label" id="cur">0:00</span>
+      <div class="progress-track" id="bar" onclick="seek(event)">
+        <div class="progress-fill" id="fill"></div>
+      </div>
+      <span class="time-label" id="total">0:00</span>
+    </div>
+  </div>
+
   <div id="ytplayer"></div>
 
+  <script>
+    // System UI Logic
+    var tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+
+    var songs = [], yt = null, ready = false, playing = false, idx = -1, interval = null;
+    
+    document.getElementById('query').onkeypress = e => { if(e.key === 'Enter') search() };
+
+    function showTab(t) {
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(t==='player'?'player-tab':t).classList.add('active');
+      document.querySelector('.nav-btn[onclick*="'+t+'"]').classList.add('active');
+    }
+
+    function onYouTubeIframeAPIReady() {
+      yt = new YT.Player('ytplayer', {
+        height: '0', width: '0', host: 'https://www.youtube-nocookie.com',
+        playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, rel: 0 },
+        events: { onReady: () => ready = true, onStateChange: onState, onError: onErr }
+      });
+    }
+
+    function onErr(e) {
+      var s = songs[idx];
+      if(!s) return;
+      if(s.fallbackVideoId && !s.triedFallback) {
+        s.triedFallback = true; yt.loadVideoById(s.fallbackVideoId);
+      } else if(!s.triedSearch) {
+        s.triedSearch = true;
+        searchFallback(s.title, s.artists?.[0]?.name || '').then(id => { if(id) yt.loadVideoById(id) });
+      }
+    }
+
+    async function searchFallback(t, a) {
+      try {
+        const res = await fetch('/api/yt_search?q=' + encodeURIComponent(t + ' ' + a + ' official') + '&filter=videos');
+        const data = await res.json();
+        return data.results?.[0]?.id || null;
+      } catch { return null; }
+    }
+
+    function onState(e) {
+      const playIcon = document.getElementById('playIcon');
+      const pauseIcon = document.getElementById('pauseIcon');
+      if (e.data === 1) {
+        playing = true; playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; startProgress();
+      } else if (e.data === 2) {
+        playing = false; playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; stopProgress();
+      } else if (e.data === 0) {
+        next();
+      }
+    }
+
+    function startProgress() { stopProgress(); interval = setInterval(updateP, 500); }
+    function stopProgress() { if(interval) clearInterval(interval); }
+    function updateP() {
+      if(!yt || !ready) return;
+      var c = yt.getCurrentTime() || 0, t = yt.getDuration() || 0;
+      document.getElementById('cur').textContent = fmt(c);
+      document.getElementById('total').textContent = fmt(t);
+      document.getElementById('fill').style.width = t > 0 ? (c/t*100)+'%' : '0%';
+    }
+    function fmt(s) { var m=Math.floor(s/60), sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec; }
+    function seek(e) {
+      var rect = document.getElementById('bar').getBoundingClientRect();
+      var pct = (e.clientX - rect.left) / rect.width;
+      yt.seekTo(pct * (yt.getDuration() || 0), true);
+    }
+
+    async function search() {
+      var q = document.getElementById('query').value.trim(); if(!q) return;
+      var f = document.getElementById('filter').value;
+      document.getElementById('searchBtn').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('results').innerHTML = '';
+      
+      try {
+        var url = '/api/search?q=' + encodeURIComponent(q) + (f ? '&filter='+f : '');
+        var res = await fetch(url);
+        songs = (await res.json()).results || [];
+        render();
+      } catch (e) {
+        document.getElementById('results').innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-dim);">Error exploring tracks.</div>';
+      }
+      
+      document.getElementById('searchBtn').disabled = false;
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    function render() {
+      var el = document.getElementById('results');
+      if (!songs.length) { el.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-dim);">No rhythms found.</div>'; return; }
+      
+      el.innerHTML = songs.map((s, i) => {
+        var thumb = s.thumbnails?.[0]?.url || 'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg';
+        return \`
+          <div class="result-item \${i===idx?'active':''}" onclick="playSong(\${i})">
+            <img class="art" src="\${thumb}">
+            <div class="track-meta">
+              <div class="track-name">\${s.title}</div>
+              <div class="artist-name">\${s.artists?.map(a=>a.name).join(', ') || s.subtitle || 'Various Artists'}</div>
+            </div>
+            <div class="duration">\${s.duration || ''}</div>
+          </div>
+        \`;
+      }).join('');
+    }
+
+    function playSong(i) {
+      if(!songs[i]) return;
+      idx = i; var s = songs[i];
+      document.getElementById('pTitle').textContent = s.title;
+      document.getElementById('pArtist').textContent = s.artists?.map(a=>a.name).join(', ') || '';
+      document.getElementById('pThumb').src = s.thumbnails?.[0]?.url || 'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg';
+      document.getElementById('playerBar').classList.add('visible');
+      yt.loadVideoById(s.videoId);
+      render();
+    }
+
+    function toggle() { if(playing) yt.pauseVideo(); else yt.playVideo(); }
+    function prev() { if(idx > 0) playSong(idx-1); }
+    function next() { if(idx < songs.length-1) playSong(idx+1); }
+
+    // Tester Logic
+    var cfg = {
+      search: { inputs: [{n:'q', p:'Query', v:'Starboy'}], url: '/api/search' },
+      stream: { inputs: [{n:'id', p:'Video ID', v:'dQw4w9WgXcQ'}], url: '/api/stream' },
+      song: { inputs: [{n:'videoId', p:'Video ID', v:'dQw4w9WgXcQ'}], url: '/api/songs/{videoId}' },
+      album: { inputs: [{n:'browseId', p:'Album ID', v:'MPREb_PvMNqFUp1oW'}], url: '/api/albums/{browseId}' },
+      artist: { inputs: [{n:'browseId', p:'Artist ID', v:'UCIaFw5VBEK8qaW6nRpx_qnw'}], url: '/api/artists/{browseId}' },
+      lyrics: { inputs: [{n:'title', p:'Title', v:'Yellow'}, {n:'artist', p:'Artist', v:'Coldplay'}], url: '/api/lyrics' }
+    };
+
+    function updateInputs() {
+      var ep = document.getElementById('endpoint').value, c = cfg[ep];
+      document.getElementById('inputs').innerHTML = c.inputs.map(i => \`
+        <div style="flex:1">
+          <label style="display:block; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 6px; font-weight: 600;">\${i.p.toUpperCase()}</label>
+          <input class="input-field" id="api_\${i.n}" placeholder="\${i.p}" value="\${i.v}" oninput="updateUrl()" style="background: rgba(255,255,255,0.05); width:100%; border-radius: 12px; border: 1px solid var(--surface-border);">
+        </div>
+      \`).join('');
+      updateUrl();
+    }
+
+    function updateUrl() {
+      var ep = document.getElementById('endpoint').value, c = cfg[ep], url = c.url, params = new URLSearchParams();
+      c.inputs.forEach(i => {
+        var v = document.getElementById('api_'+i.n)?.value || i.v;
+        if(v) { if(url.includes('{'+i.n+'}')) url = url.replace('{'+i.n+'}', encodeURIComponent(v)); else params.append(i.n, v); }
+      });
+      var qs = params.toString(); if(qs) url += '?' + qs;
+      document.getElementById('urlPreview').textContent = url;
+    }
+
+    async function testApi() {
+      var url = document.getElementById('urlPreview').textContent;
+      document.getElementById('response').innerHTML = '<pre style="color:var(--accent)">Requesting...</pre>';
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById('response').innerHTML = '<pre style="color:var(--accent)">' + JSON.stringify(data, null, 2) + '</pre>';
+      } catch (e) {
+        document.getElementById('response').innerHTML = '<pre style="color:#ef4444">Error: ' + e.message + '</pre>';
+      }
+    }
+    
+    function openTest(ep) {
+        document.getElementById('endpoint').value = ep;
+        updateInputs();
+        showTab('tester');
+    }
+
+    updateInputs();
+  </script>
 </body>
-<script>
-// Completely disable ALL console output
-(function(){
-  console.log=function(){};
-  console.warn=function(){};
-  console.error=function(){};
-  console.info=function(){};
-  console.debug=function(){};
-  console.trace=function(){};
-  console.dir=function(){};
-  console.dirxml=function(){};
-  console.table=function(){};
-  console.group=function(){};
-  console.groupCollapsed=function(){};
-  console.groupEnd=function(){};
-  console.clear=function(){};
-  console.count=function(){};
-  console.countReset=function(){};
-  console.assert=function(){};
-  console.profile=function(){};
-  console.profileEnd=function(){};
-  console.time=function(){};
-  console.timeLog=function(){};
-  console.timeEnd=function(){};
-  console.timeStamp=function(){};
-  // Suppress window errors
-  window.onerror=function(){return true};
-  window.onunhandledrejection=function(e){e.preventDefault();return true};
-})();
-// Use nocookie domain for less tracking
-var tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
-var songs=[],yt=null,ready=false,playing=false,idx=-1,interval=null;
-document.getElementById('query').onkeypress=e=>{if(e.key==='Enter')search()};
-
-function showTab(t){
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(t==='player'?'player-tab':t).classList.add('active');
-  document.querySelector('.nav-btn[onclick*="'+t+'"]').classList.add('active');
-}
-
-function onYouTubeIframeAPIReady(){
-  yt=new YT.Player('ytplayer',{height:'0',width:'0',host:'https://www.youtube-nocookie.com',playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0},events:{onReady:()=>ready=true,onStateChange:onState,onError:onErr}});
-}
-function onErr(e){
-  if(e.data===150||e.data===101||e.data===100){
-    var s=songs[idx];
-    if(s&&s.fallbackVideoId&&!s.triedFallback){
-      s.triedFallback=true;yt.loadVideoById(s.fallbackVideoId);
-    }else if(s&&!s.triedSearch){
-      s.triedSearch=true;
-      searchYouTube(s.title,s.artists?.[0]?.name||'').then(vid=>{if(vid)yt.loadVideoById(vid)});
-    }
-  }
-}
-async function searchYouTube(title,artist){
-  try{var res=await fetch('/api/yt_search?q='+encodeURIComponent(title+' '+artist+' official')+'&filter=videos');var data=await res.json();var alt=data.results?.find(v=>v.channel?.name&&!v.channel.name.includes('Topic')&&v.id);return alt?.id||null}catch(e){return null}
-}
-function onState(e){
-  if(e.data===1){playing=true;document.getElementById('playBtn').textContent='⏸';startProgress()}
-  else if(e.data===2){playing=false;document.getElementById('playBtn').textContent='▶';stopProgress()}
-  else if(e.data===0){playing=false;stopProgress();next()}
-}
-function startProgress(){stopProgress();interval=setInterval(updateProgress,500)}
-function stopProgress(){if(interval){clearInterval(interval);interval=null}}
-function updateProgress(){if(!yt||!ready)return;var c=yt.getCurrentTime()||0,t=yt.getDuration()||0;document.getElementById('cur').textContent=fmt(c);document.getElementById('total').textContent=fmt(t);document.getElementById('fill').style.width=t>0?(c/t*100)+'%':'0%'}
-function fmt(s){var m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
-function seek(e){if(!yt||!ready)return;var bar=document.getElementById('bar'),rect=bar.getBoundingClientRect(),pct=(e.clientX-rect.left)/rect.width;yt.seekTo(pct*(yt.getDuration()||0),true)}
-
-async function search(){
-  var q=document.getElementById('query').value.trim();if(!q)return;
-  var f=document.getElementById('filter').value;
-  document.getElementById('searchBtn').disabled=true;document.getElementById('loading').style.display='block';document.getElementById('results').innerHTML='';
-  try{var url='/api/search?q='+encodeURIComponent(q);if(f)url+='&filter='+f;var res=await fetch(url);var data=await res.json();songs=data.results||[];render(f)}catch(e){songs=[];render(f)}
-  document.getElementById('searchBtn').disabled=false;document.getElementById('loading').style.display='none';
-}
-
-function render(f,append){
-  var el=document.getElementById('results');
-  if(!songs.length){if(!append)el.innerHTML='<div class="empty">No results</div>';return}
-  var html=songs.map((s,i)=>{
-    var type=s.resultType||'song';
-    var playable=s.videoId&&(type==='song'||type==='video');
-    var click='';
-    // Check browseId prefix to determine actual type
-    var bid=s.browseId||'';
-    var isPlaylist=bid.startsWith('VL')||bid.startsWith('RDCLAK')||type==='playlist';
-    var isAlbum=bid.startsWith('MPRE')&&!isPlaylist;
-    var isArtist=bid.startsWith('UC')||type==='artist';
-    
-    // Store thumbnail for later use
-    var thumb=s.thumbnails?.[0]?.url||(s.videoId?'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg':'');
-    
-    if(playable){
-      click='play('+i+')';
-    }else if(isPlaylist&&bid){
-      click="viewPlaylist('"+bid+"','"+encodeURIComponent(thumb)+"','"+encodeURIComponent(s.title||'')+"')";
-      type='playlist';
-    }else if(isAlbum&&bid){
-      click="viewAlbum('"+bid+"','"+encodeURIComponent(thumb)+"','"+encodeURIComponent(s.title||'')+"')";
-      type='album';
-    }else if(isArtist&&bid){
-      click="viewArtist('"+bid+"','"+encodeURIComponent(thumb)+"','"+encodeURIComponent(s.title||'')+"')";
-      type='artist';
-    }else if(bid){
-      click="viewArtist('"+bid+"','"+encodeURIComponent(thumb)+"','"+encodeURIComponent(s.title||'')+"')";
-    }
-    var badge=type!=='song'&&type!=='video'?'<span style="font-size:.65rem;color:var(--accent);margin-left:8px;text-transform:uppercase">'+type+'</span>':'';
-    return '<div class="result'+(i===idx?' active':'')+'" onclick="'+click+'" style="cursor:pointer"><img class="thumb" src="'+thumb+'"><div class="info"><div class="name">'+esc(s.title||s.name||'Unknown')+badge+'</div><div class="artist">'+esc(s.artists?.map(a=>a.name).join(', ')||s.subtitle||'')+'</div></div><div class="dur">'+(s.duration||'')+'</div></div>';
-  }).join('');
-  if(append)el.innerHTML+=html;
-  else el.innerHTML=html;
-}
-
-function play(i){
-  if(!songs[i]||!ready)return;idx=i;var s=songs[i];
-  document.getElementById('pTitle').textContent=s.title||'Unknown';
-  document.getElementById('pArtist').textContent=s.artists?.map(a=>a.name).join(', ')||'';
-  document.getElementById('pThumb').src=s.thumbnails?.[0]?.url||'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg';
-  document.getElementById('playerBar').className='player visible';
-  document.querySelectorAll('.result').forEach((el,x)=>el.className=x===i?'result active':'result');
-  yt.loadVideoById(s.videoId);playing=true;document.getElementById('playBtn').textContent='⏸';
-}
-function toggle(){if(!ready)return;playing?yt.pauseVideo():yt.playVideo()}
-function prev(){if(idx>0)play(idx-1)}
-function next(){if(idx<songs.length-1)play(idx+1)}
-function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML}
-
-async function viewArtist(id,thumbEnc,nameEnc){
-  var searchThumb=thumbEnc?decodeURIComponent(thumbEnc):'';
-  var searchName=nameEnc?decodeURIComponent(nameEnc):'';
-  document.getElementById('loading').style.display='block';
-  document.getElementById('results').innerHTML='';
-  try{
-    var res=await fetch('/api/artists/'+encodeURIComponent(id));
-    var data=await res.json();
-    var artist=data.artist||data;
-    var tracks=[];
-    // Get songs from artist - check both structures
-    if(data.topSongs)tracks.push(...data.topSongs.map(s=>({...s,resultType:'song',videoId:s.videoId,thumbnails:[{url:s.thumbnail}]})));
-    if(data.songs?.results)tracks.push(...data.songs.results.map(s=>({...s,resultType:'song'})));
-    if(data.albums){
-      data.albums.forEach(a=>{tracks.push({...a,resultType:'album',browseId:a.browseId,thumbnails:[{url:a.thumbnail}]})});
-    }
-    if(data.singles){
-      data.singles.forEach(a=>{tracks.push({...a,resultType:'album',browseId:a.browseId,thumbnails:[{url:a.thumbnail}]})});
-    }
-    songs=tracks;
-    // Use search thumbnail if available, otherwise API thumbnail
-    var thumb=searchThumb||artist.thumbnail||artist.thumbnails?.[0]?.url||'';
-    var name=searchName||artist.name||'Artist';
-    
-    // Fetch bio from Last.fm
-    var bio='';
-    try{
-      var bioRes=await fetch('/api/artist/info?artist='+encodeURIComponent(name));
-      var bioData=await bioRes.json();
-      if(bioData.bio)bio=bioData.bio.replace(/<[^>]*>/g,'').split('Read more')[0].trim();
-    }catch(e){}
-    
-    var descHtml=bio?'<div style="color:var(--dim);font-size:.75rem;margin-top:8px;max-width:500px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">'+esc(bio)+'</div>':'';
-    var header='<div style="display:flex;align-items:flex-start;gap:20px;padding:20px;margin-bottom:20px;background:var(--surface);border-radius:12px;border:1px solid var(--border)"><img src="'+thumb+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;background:var(--surface2)"><div style="flex:1"><div style="font-size:1.2rem;font-weight:600">'+esc(name)+'</div><div style="color:var(--muted);font-size:.85rem">'+(artist.subscribers||'')+'</div>'+descHtml+'<button class="btn" style="margin-top:10px;padding:8px 16px;font-size:.8rem" onclick="goBack()">Back to Search</button></div></div>';
-    document.getElementById('results').innerHTML=header;
-    render(null,true);
-  }catch(e){document.getElementById('results').innerHTML='<div class="empty">Failed to load artist</div>';}
-  document.getElementById('loading').style.display='none';
-}
-
-async function viewAlbum(id,thumbEnc,nameEnc){
-  var searchThumb=thumbEnc?decodeURIComponent(thumbEnc):'';
-  var searchName=nameEnc?decodeURIComponent(nameEnc):'';
-  document.getElementById('loading').style.display='block';
-  document.getElementById('results').innerHTML='';
-  try{
-    var res=await fetch('/api/albums/'+encodeURIComponent(id));
-    var data=await res.json();
-    var album=data.album||data;
-    var albumThumb=searchThumb||album.thumbnail||album.thumbnails?.[0]?.url||'';
-    var albumName=searchName||album.title||'Album';
-    songs=(data.tracks||[]).map(t=>({...t,resultType:'song',thumbnails:[{url:albumThumb}]}));
-    // Show album header
-    var artistName=data.artist?.name||album.artists?.map(a=>a.name).join(', ')||'';
-    var header='<div style="display:flex;align-items:center;gap:20px;padding:20px;margin-bottom:20px;background:var(--surface);border-radius:12px;border:1px solid var(--border)"><img src="'+albumThumb+'" style="width:80px;height:80px;border-radius:8px;object-fit:cover;background:var(--surface2)"><div><div style="font-size:1.2rem;font-weight:600">'+esc(albumName)+'</div><div style="color:var(--muted);font-size:.85rem">'+esc(artistName)+'</div><div style="color:var(--dim);font-size:.75rem">'+(album.year||'')+' - '+(album.trackCount||songs.length)+' tracks</div><button class="btn" style="margin-top:10px;padding:8px 16px;font-size:.8rem" onclick="goBack()">Back to Search</button></div></div>';
-    document.getElementById('results').innerHTML=header;
-    render(null,true);
-  }catch(e){document.getElementById('results').innerHTML='<div class="empty">Failed to load album</div>';}
-  document.getElementById('loading').style.display='none';
-}
-
-async function viewPlaylist(id,thumbEnc,nameEnc){
-  var searchThumb=thumbEnc?decodeURIComponent(thumbEnc):'';
-  var searchName=nameEnc?decodeURIComponent(nameEnc):'';
-  document.getElementById('loading').style.display='block';
-  document.getElementById('results').innerHTML='';
-  try{
-    // Handle both VL prefix and raw playlist IDs
-    var playlistId=id.startsWith('VL')?id.substring(2):id;
-    var res=await fetch('/api/playlists/'+encodeURIComponent(playlistId));
-    var data=await res.json();
-    var playlistThumb=searchThumb||data.thumbnail||data.thumbnails?.[0]?.url||'';
-    var playlistName=searchName||data.title||'Playlist';
-    var desc=data.description||'';
-    var descHtml=desc?'<div style="color:var(--dim);font-size:.75rem;margin-top:4px;max-width:500px;line-height:1.4">'+esc(desc)+'</div>':'';
-    songs=(data.tracks||[]).map(t=>({...t,resultType:'song'}));
-    // Show playlist header
-    var header='<div style="display:flex;align-items:flex-start;gap:20px;padding:20px;margin-bottom:20px;background:var(--surface);border-radius:12px;border:1px solid var(--border)"><img src="'+playlistThumb+'" style="width:80px;height:80px;border-radius:8px;object-fit:cover;background:var(--surface2)"><div style="flex:1"><div style="font-size:1.2rem;font-weight:600">'+esc(playlistName)+'</div><div style="color:var(--muted);font-size:.85rem">'+esc(data.author||'')+'</div><div style="color:var(--dim);font-size:.75rem">'+(data.trackCount||songs.length)+' tracks</div>'+descHtml+'<button class="btn" style="margin-top:10px;padding:8px 16px;font-size:.8rem" onclick="goBack()">Back to Search</button></div></div>';
-    document.getElementById('results').innerHTML=header;
-    render(null,true);
-  }catch(e){document.getElementById('results').innerHTML='<div class="empty">Failed to load playlist</div>';}
-  document.getElementById('loading').style.display='none';
-}
-
-var lastSearch='';
-function goBack(){
-  var q=document.getElementById('query').value.trim();
-  if(q)search();
-  else{songs=[];document.getElementById('results').innerHTML='<div class="empty">Search for music</div>';}
-}
-
-var cfg={
-  search:{inputs:[{n:'q',p:'Query',v:'coldplay'}],url:'/api/search'},
-  stream:{inputs:[{n:'id',p:'Video ID',v:'dQw4w9WgXcQ'}],url:'/api/stream'},
-  song:{inputs:[{n:'videoId',p:'Video ID',v:'dQw4w9WgXcQ'}],url:'/api/songs/{videoId}'},
-  album:{inputs:[{n:'browseId',p:'Album ID',v:'MPREb_PvMNqFUp1oW'}],url:'/api/albums/{browseId}'},
-  artist:{inputs:[{n:'browseId',p:'Artist ID',v:'UCIaFw5VBEK8qaW6nRpx_qnw'}],url:'/api/artists/{browseId}'},
-  playlist:{inputs:[{n:'playlistId',p:'Playlist ID',v:'RDCLAK5uy_k'}],url:'/api/playlists/{playlistId}'},
-  chain:{inputs:[{n:'videoId',p:'Video ID',v:'9qnqYL0eNNI'}],url:'/api/chain/{videoId}'},
-  related:{inputs:[{n:'id',p:'Video ID',v:'dQw4w9WgXcQ'}],url:'/api/related/{id}'},
-  radio:{inputs:[{n:'videoId',p:'Video ID',v:'9qnqYL0eNNI'}],url:'/api/radio'},
-  lyrics:{inputs:[{n:'title',p:'Title',v:'Yellow'},{n:'artist',p:'Artist',v:'Coldplay'}],url:'/api/lyrics'},
-  charts:{inputs:[{n:'country',p:'Country',v:'US'}],url:'/api/charts'}
-};
-
-function updateInputs(){
-  var ep=document.getElementById('endpoint').value,c=cfg[ep];
-  document.getElementById('inputs').innerHTML=c.inputs.map(i=>'<input class="input" id="api_'+i.n+'" placeholder="'+i.p+'" value="'+i.v+'" oninput="updateUrl()">').join('');
-  updateUrl();
-}
-function updateUrl(){
-  var ep=document.getElementById('endpoint').value,c=cfg[ep],url=c.url,params=new URLSearchParams();
-  c.inputs.forEach(i=>{var v=document.getElementById('api_'+i.n)?.value||i.v;if(v){if(url.includes('{'+i.n+'}'))url=url.replace('{'+i.n+'}',encodeURIComponent(v));else params.append(i.n,v)}});
-  var qs=params.toString();if(qs)url+='?'+qs;document.getElementById('urlPreview').textContent='GET '+url;
-}
-async function testApi(){
-  var ep=document.getElementById('endpoint').value,c=cfg[ep],url=c.url,params=new URLSearchParams();
-  c.inputs.forEach(i=>{var v=document.getElementById('api_'+i.n)?.value||i.v;if(v){if(url.includes('{'+i.n+'}'))url=url.replace('{'+i.n+'}',encodeURIComponent(v));else params.append(i.n,v)}});
-  var qs=params.toString();if(qs)url+='?'+qs;
-  document.getElementById('response').innerHTML='<pre>Loading...</pre>';
-  try{var res=await fetch(url);var data=await res.json();document.getElementById('response').innerHTML='<pre>'+JSON.stringify(data,null,2)+'</pre>'}catch(e){document.getElementById('response').innerHTML='<pre>Error: '+e.message+'</pre>'}
-}
-updateInputs();
-</script>
 </html>`;
