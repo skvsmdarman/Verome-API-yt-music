@@ -24,13 +24,21 @@ app.get("/", (req, res) => {
 });
 
 // Logo
-app.get("/assets/Logo.png", (req, res) => {
-    const logoPath = path.join(__dirname, "assets", "Logo.png");
-    if (fs.existsSync(logoPath)) {
-        res.sendFile(logoPath);
-    } else {
-        res.status(404).send("Logo not found");
+app.get("/assets/:logo", (req, res) => {
+    const logoName = req.params.logo;
+    // Check various casing and paths (root level vs assets folder)
+    const paths = [
+        path.join(__dirname, "assets", logoName),
+        path.join(__dirname, logoName),
+        path.join(__dirname, "..", "assets", logoName),
+        path.join(__dirname, "assets", "Logo.png"), // fallback
+    ];
+    for (const p of paths) {
+        if (fs.existsSync(p) && fs.lstatSync(p).isFile()) {
+            return res.sendFile(p);
+        }
     }
+    res.status(404).send("Logo not found");
 });
 
 app.get("/health", (req, res) => {
@@ -131,10 +139,10 @@ app.get("/api/stream", async (req, res) => {
     if (!id) return res.status(400).json({ error: "Missing id" });
 
     const piped = await fetchFromPiped(String(id));
-    if (piped.success) return res.json({ success: true, service: "piped", ...piped });
+    if (piped.success) return res.json({ service: "piped", ...piped });
 
     const invidious = await fetchFromInvidious(String(id));
-    if (invidious.success) return res.json({ success: true, service: "invidious", ...invidious });
+    if (invidious.success) return res.json({ service: "invidious", ...invidious });
 
     res.status(404).json({ success: false, error: "No streaming data found" });
 });
@@ -159,6 +167,10 @@ app.get("/api/radio", async (req, res) => res.json(await getRadio(String(req.que
 app.get("/api/top/artists", async (req, res) => res.json(await getTopArtists(String(req.query.country || "") || undefined, parseInt(String(req.query.limit || "20")), ytmusic)));
 app.get("/api/top/tracks", async (req, res) => res.json(await getTopTracks(String(req.query.country || "") || undefined, parseInt(String(req.query.limit || "20")), ytmusic)));
 
-app.listen(PORT, () => {
-    console.log(`Verome API (Node.js) running at http://localhost:${PORT}`);
-});
+export default app;
+
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Verome API (Node.js) running at http://localhost:${PORT}`);
+    });
+}
