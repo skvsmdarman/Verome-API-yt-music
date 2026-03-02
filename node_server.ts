@@ -132,6 +132,318 @@ app.get("/api/watch_playlist", async (req, res) => {
     res.json(await ytmusic.getWatchPlaylist(videoId ? String(videoId) : undefined, playlistId ? String(playlistId) : undefined, radio === "true", shuffle === "true", parseInt(String(limit || "25"))));
 });
 
+// ============ NATIVE EMBED PLAYER ============
+
+app.get("/player/:videoId", (req, res) => {
+    const videoId = req.params.videoId;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verome Music Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #10b981;
+            --bg: #050505;
+            --surface: rgba(20, 20, 20, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-muted: #a1a1aa;
+        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        #ytplayer { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+        
+        .player-container {
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            max-height: 800px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+        }
+
+        .bg-blur {
+            position: absolute;
+            inset: -50px;
+            background-size: cover;
+            background-position: center;
+            filter: blur(50px) brightness(0.3);
+            z-index: 0;
+            transition: background-image 0.5s ease;
+        }
+
+        .art-container {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .art {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .info {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .artist {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { transform: scale(1.1); color: var(--accent); }
+        
+        .play-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--text);
+            color: var(--bg);
+        }
+        .play-btn:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .progress-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .loader {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-blur" id="bgBlur"></div>
+    <div id="ytplayer"></div>
+    
+    <div class="player-container">
+        <div class="loader" id="loader">Loading Track...</div>
+        
+        <div class="art-container">
+            <img class="art" id="art" src="" alt="Album Art">
+        </div>
+        
+        <div class="info">
+            <div class="title" id="title">Loading...</div>
+            <div class="artist" id="artist">Verome Music</div>
+        </div>
+
+        <div class="progress-container">
+            <span id="currTime">0:00</span>
+            <div class="progress-bar" id="progressBar" onclick="seek(event)">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span id="totalTime">0:00</span>
+        </div>
+
+        <div class="controls" style="margin-top: 2rem;">
+            <button class="btn play-btn" id="playBtn" onclick="togglePlay()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" id="playIcon">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const videoId = "${videoId}";
+        let player;
+        let isPlaying = false;
+        let duration = 0;
+        let progressInterval;
+        let hasFallback = false;
+
+        // Fetch Metadata
+        async function loadMetadata(id) {
+            try {
+                const res = await fetch('/api/songs/' + id);
+                const data = await res.json();
+                if(data && data.title) {
+                    document.getElementById('title').innerText = data.title;
+                    document.getElementById('artist').innerText = data.artist || 'Unknown Artist';
+                    const artUrl = data.thumbnail || (data.thumbnails && data.thumbnails[0] && data.thumbnails[0].url) || '';
+                    if(artUrl) {
+                        document.getElementById('art').src = artUrl;
+                        document.getElementById('bgBlur').style.backgroundImage = 'url(' + artUrl + ')';
+                    }
+                }
+            } catch(e) { console.error('Meta fetch err', e); }
+        }
+
+        loadMetadata(videoId);
+
+        // Init YouTube API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('ytplayer', {
+                videoId: videoId,
+                playerVars: { 'autoplay': 1, 'controls': 0, 'playsinline': 1, 'rel': 0 },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            document.getElementById('loader').style.display = 'none';
+            event.target.playVideo();
+            duration = player.getDuration();
+            document.getElementById('totalTime').innerText = formatTime(duration);
+            progressInterval = setInterval(updateProgress, 500);
+        }
+
+        function onPlayerStateChange(event) {
+            if(event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                document.getElementById('loader').style.display = 'none';
+                duration = player.getDuration();
+                document.getElementById('totalTime').innerText = formatTime(duration);
+                document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause icon
+            } else if(event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                isPlaying = false;
+                document.getElementById('playIcon').innerHTML = '<path d="M8 5v14l11-7z"/>'; // Play icon
+            }
+        }
+
+        async function onPlayerError(event) {
+            if (hasFallback) {
+                document.getElementById('loader').innerText = 'Playback Failed';
+                return;
+            }
+            hasFallback = true;
+            document.getElementById('loader').innerText = 'Finding fallback...';
+            document.getElementById('loader').style.display = 'flex';
+            try {
+                const query = document.getElementById('title').innerText + ' ' + document.getElementById('artist').innerText + ' official music video';
+                const searchRes = await fetch('/api/yt_search?q=' + encodeURIComponent(query) + '&filter=videos');
+                const searchData = await searchRes.json();
+                const alt = searchData.results[0];
+                if (alt && alt.id) {
+                    player.loadVideoById(alt.id);
+                    loadMetadata(alt.id);
+                } else throw new Error();
+            } catch(e) {
+                document.getElementById('loader').innerText = 'Playback Error.';
+            }
+        }
+
+        function togglePlay() {
+            if (!player || !player.getPlayerState) return;
+            if (isPlaying) player.pauseVideo();
+            else player.playVideo();
+        }
+
+        function updateProgress() {
+            if (!player || !player.getCurrentTime) return;
+            const curr = player.getCurrentTime();
+            document.getElementById('currTime').innerText = formatTime(curr);
+            if (duration > 0) {
+                document.getElementById('progressFill').style.width = ((curr / duration) * 100) + '%';
+            }
+        }
+
+        function seek(e) {
+            if (!player || !duration) return;
+            const bar = document.getElementById('progressBar');
+            const rect = bar.getBoundingClientRect();
+            const clickPos = (e.clientX - rect.left) / rect.width;
+            player.seekTo(clickPos * duration, true);
+        }
+
+        function formatTime(sec) {
+            if(isNaN(sec)) return "0:00";
+            let m = Math.floor(sec / 60);
+            let s = Math.floor(sec % 60);
+            return m + ":" + (s < 10 ? "0" + s : s);
+        }
+    </script>
+</body>
+</html>`;
+    res.send(html);
+});
+
 // ============ STREAMING ============
 
 app.get("/api/stream", async (req, res) => {

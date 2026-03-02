@@ -27,11 +27,11 @@ export class YTMusic {
   async search(query: string, filter?: string, continuationToken?: string, _ignoreSpelling = false, region?: string, language?: string) {
     // Normalize the query to handle Arabic and other Unicode characters properly
     const normalizedQuery = query.normalize("NFC");
-    
+
     const filterParams = this.getFilterParams(filter);
     const params: any = continuationToken
       ? { continuation: continuationToken }
-      : filterParams 
+      : filterParams
         ? { query: normalizedQuery, params: filterParams }
         : { query: normalizedQuery };
 
@@ -69,31 +69,31 @@ export class YTMusic {
 
   async getAlbum(browseId: string) {
     const data = await this.makeRequest("browse", { browseId });
-    
+
     // Handle both single and two column layouts
     const singleColumn = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents;
     const twoColumnPrimary = data?.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents;
     const twoColumnSecondary = data?.contents?.twoColumnBrowseResultsRenderer?.secondaryContents?.sectionListRenderer?.contents;
-    
+
     // Get header from different possible locations
     let title = "";
     let artist = "";
     let thumbnail = "";
     let year = "";
-    
+
     // Check old header location
-    const oldHeader = data?.header?.musicDetailHeaderRenderer || 
-                      data?.header?.musicImmersiveHeaderRenderer || 
-                      data?.header?.musicVisualHeaderRenderer;
-    
+    const oldHeader = data?.header?.musicDetailHeaderRenderer ||
+      data?.header?.musicImmersiveHeaderRenderer ||
+      data?.header?.musicVisualHeaderRenderer;
+
     if (oldHeader) {
       title = oldHeader.title?.runs?.[0]?.text;
       const subtitleRuns = oldHeader.subtitle?.runs || oldHeader.straplineTextOne?.runs || [];
       artist = subtitleRuns.find((r: any) => r.navigationEndpoint)?.text || subtitleRuns[0]?.text;
       thumbnail = oldHeader.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url ||
-                  oldHeader.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url;
+        oldHeader.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url;
     }
-    
+
     // Check new header location (musicResponsiveHeaderRenderer in contents)
     const primaryContents = twoColumnPrimary || singleColumn || [];
     for (const section of primaryContents) {
@@ -103,7 +103,7 @@ export class YTMusic {
         const subtitleRuns = h.straplineTextOne?.runs || h.subtitle?.runs || [];
         artist = subtitleRuns.find((r: any) => r.navigationEndpoint)?.text || subtitleRuns[0]?.text || artist;
         thumbnail = h.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url || thumbnail;
-        
+
         // Get year from subtitle
         const secondSubtitle = h.subtitle?.runs || [];
         for (const run of secondSubtitle) {
@@ -117,11 +117,11 @@ export class YTMusic {
         if (yearMatch && !year) year = yearMatch[0];
       }
     }
-    
+
     // Parse tracks from secondary contents
     const trackContents = twoColumnSecondary || singleColumn || [];
     const tracks = this.parseTracksFromContents(trackContents);
-    
+
     return {
       browseId,
       title,
@@ -136,20 +136,20 @@ export class YTMusic {
   async getArtist(browseId: string) {
     const data = await this.makeRequest("browse", { browseId });
     const header = data?.header?.musicImmersiveHeaderRenderer || data?.header?.musicVisualHeaderRenderer || {};
-    
+
     // Get contents for top songs, albums, etc.
     const contents = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
-    
+
     // Parse sections
     const topSongs: any[] = [];
     const albums: any[] = [];
     const singles: any[] = [];
     const videos: any[] = [];
-    
+
     for (const section of contents) {
       const shelf = section.musicShelfRenderer;
       const carousel = section.musicCarouselShelfRenderer;
-      
+
       if (shelf) {
         const title = shelf.title?.runs?.[0]?.text?.toLowerCase() || "";
         if (title.includes("song")) {
@@ -159,17 +159,17 @@ export class YTMusic {
           }
         }
       }
-      
+
       if (carousel) {
         const title = carousel.header?.musicCarouselShelfBasicHeaderRenderer?.title?.runs?.[0]?.text?.toLowerCase() || "";
         const items = (carousel.contents || []).map((item: any) => this.parseTwoRowItem(item.musicTwoRowItemRenderer)).filter(Boolean);
-        
+
         if (title.includes("album")) albums.push(...items);
         else if (title.includes("single")) singles.push(...items);
         else if (title.includes("video")) videos.push(...items);
       }
     }
-    
+
     return {
       browseId,
       name: header.title?.runs?.[0]?.text,
@@ -235,14 +235,14 @@ export class YTMusic {
   async getPlaylist(playlistId: string) {
     const browseId = `VL${playlistId.replace(/^VL/, "")}`;
     const data = await this.makeRequest("browse", { browseId });
-    
+
     // Get header from primary contents (new structure)
     const primaryContents = data?.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
     let title = "";
     let author = "";
     let description = "";
     let thumbnail = "";
-    
+
     for (const section of primaryContents) {
       if (section.musicResponsiveHeaderRenderer) {
         const h = section.musicResponsiveHeaderRenderer;
@@ -253,22 +253,22 @@ export class YTMusic {
         thumbnail = h.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url || "";
       }
     }
-    
+
     // Fallback to old header location
-    const oldHeader = data?.header?.musicDetailHeaderRenderer || 
-                      data?.header?.musicEditablePlaylistDetailHeaderRenderer?.header?.musicDetailHeaderRenderer;
+    const oldHeader = data?.header?.musicDetailHeaderRenderer ||
+      data?.header?.musicEditablePlaylistDetailHeaderRenderer?.header?.musicDetailHeaderRenderer;
     if (oldHeader && !title) {
       title = oldHeader.title?.runs?.[0]?.text || "";
       const subtitleRuns = oldHeader.subtitle?.runs || [];
       author = subtitleRuns.find((r: any) => r.navigationEndpoint)?.text || subtitleRuns[0]?.text || "";
       thumbnail = oldHeader.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url ||
-                  oldHeader.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url || "";
+        oldHeader.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url || "";
     }
-    
+
     // Get tracks from secondary contents
     const secondaryContents = data?.contents?.twoColumnBrowseResultsRenderer?.secondaryContents?.sectionListRenderer?.contents || [];
     const tracks: any[] = [];
-    
+
     for (const section of secondaryContents) {
       // Handle musicPlaylistShelfRenderer (new structure)
       if (section.musicPlaylistShelfRenderer) {
@@ -285,7 +285,7 @@ export class YTMusic {
         }
       }
     }
-    
+
     // Fallback to single column layout
     if (tracks.length === 0) {
       const singleColumn = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
@@ -298,7 +298,7 @@ export class YTMusic {
         }
       }
     }
-    
+
     return {
       playlistId: playlistId.replace(/^VL/, ""),
       title,
@@ -326,7 +326,7 @@ export class YTMusic {
   async getMoodPlaylists(categoryId: string) {
     const data = await this.makeRequest("browse", { browseId: categoryId });
     const contents = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
-    
+
     const playlists: any[] = [];
     for (const section of contents) {
       const items = section.musicShelfRenderer?.contents || [];
@@ -374,17 +374,17 @@ export class YTMusic {
 
     const secondaryResults = data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results || [];
     const results: any[] = [];
-    
+
     for (const item of secondaryResults) {
       // Handle new lockupViewModel format
       if (item.lockupViewModel) {
         const lockup = item.lockupViewModel;
         const metadata = lockup.metadata?.lockupMetadataViewModel;
         const contentImage = lockup.contentImage?.collectionThumbnailViewModel?.primaryThumbnail?.thumbnailViewModel;
-        
+
         const videoIdMatch = lockup.rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint?.videoId ||
-                            lockup.contentId;
-        
+          lockup.contentId;
+
         if (videoIdMatch) {
           results.push({
             videoId: videoIdMatch,
@@ -417,7 +417,7 @@ export class YTMusic {
         }
       }
     }
-    
+
     return results.slice(0, 20);
   }
 
@@ -448,7 +448,7 @@ export class YTMusic {
   private getFilterParams(filter?: string): string | undefined {
     // Return undefined for no filter (searches everything - mixed results)
     if (!filter) return undefined;
-    
+
     // These params are from YouTube Music's actual web requests
     const filterMap: Record<string, string> = {
       songs: "EgWKAQIIAWoKEAkQAxAEEAoQBQ%3D%3D",
@@ -511,18 +511,18 @@ export class YTMusic {
 
   private parseTopResultCard(card: any) {
     if (!card) return null;
-    
+
     const title = card.title?.runs?.[0]?.text;
     const subtitleRuns = card.subtitle?.runs || [];
     const thumbnail = card.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.[0]?.url;
-    
+
     // Extract video ID from various possible locations
     const videoId = card.onTap?.watchEndpoint?.videoId ||
-                    card.buttons?.[0]?.buttonRenderer?.command?.watchEndpoint?.videoId;
-    
+      card.buttons?.[0]?.buttonRenderer?.command?.watchEndpoint?.videoId;
+
     // Extract browse ID for artists/albums
     const browseId = card.onTap?.browseEndpoint?.browseId;
-    
+
     // Determine type from subtitle
     const subtitleText = subtitleRuns.map((r: any) => r.text).join("");
     let resultType = "song";
@@ -535,13 +535,13 @@ export class YTMusic {
     } else if (subtitleText.toLowerCase().includes("playlist")) {
       resultType = "playlist";
     }
-    
+
     // Extract artist name from subtitle
-    const artistRun = subtitleRuns.find((r: any) => 
+    const artistRun = subtitleRuns.find((r: any) =>
       r.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig?.pageType === "MUSIC_PAGE_TYPE_ARTIST"
     );
     const artists = artistRun ? [{ name: artistRun.text, id: artistRun.navigationEndpoint?.browseEndpoint?.browseId }] : [];
-    
+
     return {
       title,
       thumbnails: [{ url: thumbnail }],
@@ -557,7 +557,7 @@ export class YTMusic {
   private parseSuggestions(data: any): string[] {
     const suggestions: string[] = [];
     const contents = data?.contents?.[0]?.searchSuggestionsSectionRenderer?.contents || data?.contents || [];
-    
+
     for (const content of contents) {
       const runs = content?.searchSuggestionRenderer?.suggestion?.runs || [];
       const text = runs.map((r: any) => r.text).join("");
@@ -608,10 +608,10 @@ export class YTMusic {
 
   private parseChartsData(data: any) {
     const results: any[] = [];
-    
+
     // Try different response structures
     const contents = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
-    
+
     for (const section of contents) {
       // Handle musicCarouselShelfRenderer (common for charts)
       if (section.musicCarouselShelfRenderer) {
@@ -625,20 +625,20 @@ export class YTMusic {
       // Handle musicShelfRenderer
       if (section.musicShelfRenderer) {
         const title = section.musicShelfRenderer?.title?.runs?.[0]?.text;
-        const items = (section.musicShelfRenderer?.contents || []).map((item: any) => 
+        const items = (section.musicShelfRenderer?.contents || []).map((item: any) =>
           this.parseMusicItem(item.musicResponsiveListItemRenderer)
         ).filter(Boolean);
         if (title && items.length) results.push({ title, items });
       }
     }
-    
+
     return results;
   }
 
   private parseMoodsData(data: any) {
     const results: any[] = [];
     const contents = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
-    
+
     for (const section of contents) {
       if (section.gridRenderer) {
         const items = (section.gridRenderer?.items || []).map((item: any) => {
@@ -666,7 +666,7 @@ export class YTMusic {
         if (title && items.length) results.push({ title, items });
       }
     }
-    
+
     return results;
   }
 
@@ -742,12 +742,12 @@ export class YouTubeSearch {
       const url = `${this.suggestionsURL}?ds=yt&client=youtube&q=${encodeURIComponent(normalizedQuery)}`;
       const response = await fetch(url);
       const text = await response.text();
-      
+
       // Parse JSONP response
       const start = text.indexOf("(");
       const end = text.lastIndexOf(")");
       if (start === -1 || end === -1) return this.getStaticSuggestions(query);
-      
+
       const json = JSON.parse(text.slice(start + 1, end));
       return (json[1] || []).map((item: any) => Array.isArray(item) ? item[0] : item).slice(0, 10);
     } catch {
@@ -938,13 +938,13 @@ export const LastFM = {
 
   async getSimilarTracks(title: string, artist: string, limit = "5") {
     const url = `https://ws.audioscrobbler.com/2.0/?method=track.getsimilar&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&api_key=${this.API_KEY}&limit=${limit}&format=json`;
-    
+
     try {
       const response = await fetch(url);
       const data = await response.json();
-      
+
       if (data?.error) return { error: data.message || "Last.fm error" };
-      
+
       return (data?.similartracks?.track || [])
         .map((t: any) => ({ title: t.name, artist: t?.artist?.name }))
         .filter((t: any) => t.title && t.artist);
@@ -982,10 +982,10 @@ export async function getDynamicInstances() {
   try {
     const response = await fetch("https://raw.githubusercontent.com/n-ce/Uma/main/dynamic_instances.json");
     const data = await response.json();
-    
+
     // Always use our working Piped instances
     data.piped = workingPipedInstances;
-    
+
     instancesCache = data;
     instancesCacheTime = now;
     return instancesCache;
@@ -1017,7 +1017,7 @@ export async function fetchFromPiped(videoId: string) {
         // Get the proxy host from the instance (e.g., pipedapi.kavin.rocks -> pipedproxy.kavin.rocks)
         const instanceUrl = new URL(instance);
         const proxyHost = instanceUrl.host.replace('pipedapi', 'pipedproxy').replace('api.', 'proxy.');
-        
+
         return {
           success: true,
           instance,
@@ -1059,7 +1059,7 @@ export async function fetchFromInvidious(videoId: string) {
       const data = await response.json();
 
       if (data) {
-        const audioFormats = (data.adaptiveFormats || []).filter((f: any) => 
+        const audioFormats = (data.adaptiveFormats || []).filter((f: any) =>
           f.type?.includes("audio") || f.mimeType?.includes("audio")
         );
 
@@ -1102,10 +1102,10 @@ export async function getLyrics(title: string, artist: string, duration?: number
     // Try exact match first
     let url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(title)}&artist_name=${encodeURIComponent(artist)}`;
     if (duration) url += `&duration=${duration}`;
-    
+
     let response = await fetch(url);
     let data = await response.json();
-    
+
     // If no exact match, try search
     if (!data || data.statusCode === 404) {
       const searchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(`${title} ${artist}`)}`;
@@ -1115,11 +1115,11 @@ export async function getLyrics(title: string, artist: string, duration?: number
         data = results[0];
       }
     }
-    
+
     if (!data || data.statusCode) {
       return { success: false, error: "Lyrics not found" };
     }
-    
+
     return {
       success: true,
       trackName: data.trackName,
@@ -1146,13 +1146,13 @@ export async function getTrendingMusic(country = "United States", ytmusic?: YTMu
         `popular ${country}n music`,
         `new ${country}n songs 2026`,
       ];
-      
+
       const allTracks: any[] = [];
       const seenIds = new Set<string>();
-      
+
       for (const query of searchQueries) {
         if (allTracks.length >= 30) break;
-        
+
         const results = await ytmusic.search(query, "songs");
         if (results.results) {
           for (const t of results.results) {
@@ -1170,7 +1170,7 @@ export async function getTrendingMusic(country = "United States", ytmusic?: YTMu
           }
         }
       }
-      
+
       if (allTracks.length > 0) {
         return {
           success: true,
@@ -1179,7 +1179,7 @@ export async function getTrendingMusic(country = "United States", ytmusic?: YTMu
         };
       }
     }
-    
+
     return { success: false, error: "Could not fetch trending" };
   } catch (err) {
     return { success: false, error: String(err) };
@@ -1192,7 +1192,7 @@ export async function getRadio(videoId: string, ytmusic: YTMusic) {
   try {
     // Use YouTube Music's radio feature
     const data = await ytmusic.getWatchPlaylist(videoId, undefined, true, false, 50);
-    
+
     if (data.tracks && data.tracks.length > 0) {
       return {
         success: true,
@@ -1200,7 +1200,7 @@ export async function getRadio(videoId: string, ytmusic: YTMusic) {
         tracks: data.tracks,
       };
     }
-    
+
     return { success: false, error: "Could not generate radio" };
   } catch (err) {
     return { success: false, error: String(err) };
@@ -1221,13 +1221,13 @@ export async function getTopArtists(country?: string, limit = 20, ytmusic?: YTMu
         `artist from ${country}`,
         `singer from ${country}`,
       ];
-      
+
       const allArtists: any[] = [];
       const seenIds = new Set<string>();
-      
+
       for (const query of searchQueries) {
         if (allArtists.length >= limit) break;
-        
+
         const results = await ytmusic.search(query, "artists");
         if (results.results) {
           for (const a of results.results) {
@@ -1243,7 +1243,7 @@ export async function getTopArtists(country?: string, limit = 20, ytmusic?: YTMu
           }
         }
       }
-      
+
       if (allArtists.length > 0) {
         return {
           success: true,
@@ -1252,14 +1252,14 @@ export async function getTopArtists(country?: string, limit = 20, ytmusic?: YTMu
         };
       }
     }
-    
+
     // Fallback to Last.fm global charts
     const url = `https://ws.audioscrobbler.com/2.0/?method=chart.gettopartists&api_key=${LastFM.API_KEY}&limit=${limit}&format=json`;
     const response = await fetch(url);
     const data = await response.json();
-    
+
     const artists = data?.artists?.artist || [];
-    
+
     return {
       success: true,
       country: "Global",
@@ -1290,13 +1290,13 @@ export async function getTopTracks(country?: string, limit = 20, ytmusic?: YTMus
         `music from ${country}`,
         `songs from ${country}`,
       ];
-      
+
       const allTracks: any[] = [];
       const seenIds = new Set<string>();
-      
+
       for (const query of searchQueries) {
         if (allTracks.length >= limit) break;
-        
+
         const results = await ytmusic.search(query, "songs");
         if (results.results) {
           for (const t of results.results) {
@@ -1314,7 +1314,7 @@ export async function getTopTracks(country?: string, limit = 20, ytmusic?: YTMus
           }
         }
       }
-      
+
       if (allTracks.length > 0) {
         return {
           success: true,
@@ -1323,14 +1323,14 @@ export async function getTopTracks(country?: string, limit = 20, ytmusic?: YTMus
         };
       }
     }
-    
+
     // Fallback to Last.fm global charts
     const url = `https://ws.audioscrobbler.com/2.0/?method=chart.gettoptracks&api_key=${LastFM.API_KEY}&limit=${limit}&format=json`;
     const response = await fetch(url);
     const data = await response.json();
-    
+
     const tracks = data?.tracks?.track || [];
-    
+
     return {
       success: true,
       country: "Global",
@@ -1352,14 +1352,14 @@ export async function getTopTracks(country?: string, limit = 20, ytmusic?: YTMus
 export async function getArtistInfo(artist: string) {
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(artist)}&api_key=${LastFM.API_KEY}&format=json`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     if (data?.error) {
       return { success: false, error: data.message };
     }
-    
+
     const a = data?.artist;
     return {
       success: true,
@@ -1383,14 +1383,14 @@ export async function getArtistInfo(artist: string) {
 export async function getTrackInfo(title: string, artist: string) {
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&api_key=${LastFM.API_KEY}&format=json`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     if (data?.error) {
       return { success: false, error: data.message };
     }
-    
+
     const t = data?.track;
     return {
       success: true,
